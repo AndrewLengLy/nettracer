@@ -1,0 +1,26 @@
+{
+  "name": "nettracer",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "NetTracer · Protocol & Topology Explorer. An interactive network simulator that shows why packets move the way they do and how to improve the network.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "lucide-react": "^1.69.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "three": "^0.187.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.7.0",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.17",
+    "vite": "^5.4.21"
+  }
+}
