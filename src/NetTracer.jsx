@@ -1904,7 +1904,6 @@ const scoreColor = (s) => (s >= 85 ? '#10B981' : s >= 60 ? '#F59E0B' : '#F43F5E'
 const ACTION_ICON = { wrench: Wrench, shield: ShieldCheck, split: Split, lock: Lock, route: Route, power: Power };
 
 const CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap');
 .nt-root .font-mono{font-family:${FONT_MONO}}
 .nt-root{font-feature-settings:'cv11','ss01','tnum'}
 .nt-scroll{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent}
