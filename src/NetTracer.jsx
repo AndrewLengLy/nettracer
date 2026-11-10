@@ -1895,6 +1895,7 @@ function createStage(container, live, cb) {
    3 · REACT INTERFACE  (Header · Labs · Stage + Capture · Narrative)
    ===================================================================== */
 
+const AUTHOR_URL = 'https://www.andrewlengly.com';
 const FONT_SANS = "'Inter', 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif";
 const FONT_MONO = "'JetBrains Mono', 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace";
 const micro = 'text-[10px] tracking-[0.14em] uppercase text-zinc-500 font-mono';
@@ -2868,14 +2869,20 @@ export default function NetTracer() {
   return (
     <div className="nt-root flex h-screen w-full min-w-[1180px] flex-col overflow-hidden bg-[#090A0F] text-[#F3F4F6] antialiased" style={{ fontFamily: FONT_SANS }}>
       <style>{CSS}</style>
+      <h1 className="sr-only">NetTracer protocol and topology explorer</h1>
       <Header lab={lab} mode={mode} setMode={setMode} ev={ev} names={names} health={health} />
       <div className="grid min-h-0 flex-1 grid-cols-[292px_minmax(0,1fr)_376px]">
-        <aside className="min-h-0 bg-[#0C0E14]">
-          {mode === 'guided' ? (
-            <LabsPanel cat={cat} setCat={setCat} labId={labId} selectLab={selectLab} sim={sim} idx={safeIdx} seek={seek} names={names} />
-          ) : (
-            <SandboxPanel topo={topo} setTopo={setTopo} sbFlow={sbFlow} setSbFlow={setSbFlow} sim={sim} idx={safeIdx} seek={seek} onSelect={setSelected} names={names} />
-          )}
+        <aside className="flex min-h-0 flex-col bg-[#0C0E14]">
+          <div className="min-h-0 flex-1">
+            {mode === 'guided' ? (
+              <LabsPanel cat={cat} setCat={setCat} labId={labId} selectLab={selectLab} sim={sim} idx={safeIdx} seek={seek} names={names} />
+            ) : (
+              <SandboxPanel topo={topo} setTopo={setTopo} sbFlow={sbFlow} setSbFlow={setSbFlow} sim={sim} idx={safeIdx} seek={seek} onSelect={setSelected} names={names} />
+            )}
+          </div>
+          <div className="shrink-0 border-t border-white/[0.07] px-4 py-2 font-mono text-[10.5px] tracking-[0.06em]">
+            <a href={AUTHOR_URL} className="text-zinc-400 underline decoration-white/20 underline-offset-4 hover:text-zinc-100">Built by Andrew Ly</a>
+          </div>
         </aside>
 
         <main className="flex min-h-0 min-w-0 flex-col border-x border-white/[0.07]">

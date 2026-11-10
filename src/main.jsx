@@ -29,7 +29,7 @@ function App() {
           NetTracer runs a 3D network diorama next to a live packet capture and a layer-by-layer inspector. Open it on a laptop or desktop for the full lab.
         </p>
         <button onClick={() => setForce(true)} className="h-10 rounded-md bg-[#F3F4F6] px-4 text-[14px] font-medium text-[#090A0F]">Open anyway</button>
-        <a href="https://www.andrewlengly.com" className="font-mono text-[12px] tracking-[0.08em] text-zinc-500 underline underline-offset-4">andrewlengly.com</a>
+        <a href="https://www.andrewlengly.com" className="font-mono text-[12px] tracking-[0.08em] text-zinc-500 underline underline-offset-4">Built by Andrew Ly</a>
       </div>
     );
   }
