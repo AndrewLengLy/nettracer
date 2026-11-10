@@ -1003,6 +1003,13 @@ function removeDevice(topo, id) {
 
 const STAGE_YAW = Math.PI / 4 + 0.13;
 const CAM_DIR = new THREE.Vector3(22, 20, 22).normalize();
+/** True when the visitor asked the system for less motion. The query object stays live, so a change applies without a reload. */
+let reduceQuery = null;
+const prefersReducedMotion = () => {
+  if (typeof window === 'undefined' || !window.matchMedia) return false;
+  reduceQuery = reduceQuery || window.matchMedia('(prefers-reduced-motion: reduce)');
+  return reduceQuery.matches;
+};
 const easeIO = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
 const easeOut = (x) => 1 - Math.pow(1 - x, 3);
 const escHtml = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -1387,6 +1394,8 @@ function createStage(container, live, cb) {
   renderer.shadowMap.type = THREE.PCFShadowMap;
   renderer.domElement.style.display = 'block';
   renderer.domElement.style.outline = 'none';
+  renderer.domElement.setAttribute('role', 'img');
+  renderer.domElement.setAttribute('aria-label', '3D view of the lab network. The capture table below lists every frame it shows.');
   container.appendChild(renderer.domElement);
   const labels = new CSS2DRenderer();
   labels.setSize(W, H);
@@ -1595,7 +1604,7 @@ function createStage(container, live, cb) {
       return;
     }
     if (intro) controls.target.copy(center);
-    tween = { t: 0, dur: intro ? 1.6 : 0.9, fromPos: camera.position.clone(), toPos, fromT: controls.target.clone(), toT: center };
+    tween = { t: 0, dur: prefersReducedMotion() ? 0.001 : intro ? 1.6 : 0.9, fromPos: camera.position.clone(), toPos, fromT: controls.target.clone(), toT: center };
   }
 
   const ray = new THREE.Raycaster();
@@ -1679,6 +1688,8 @@ function createStage(container, live, cb) {
   const tmpCol = new THREE.Color();
   let raf = 0;
   let time = 0;
+  // Reduced motion: `time` drives the ambient bob, pulse, spin and LED blink, so it holds still. Packets still travel when the visitor plays or steps.
+  let stillLeds = false;
 
   function advance(dt) {
     const evs = live.events;
@@ -1829,7 +1840,7 @@ function createStage(container, live, cb) {
       en.aring.material.color.copy(ev && ev.drop ? tmpCol.set(PROTO_COLOR.DROP) : col);
       en.aring.material.opacity = en.k * (0.35 + 0.25 * Math.sin(time * 6));
       if (en.on && en.leds.length) {
-        const blink = act ? (Math.sin(time * 22) > 0 ? 1 : 0.25) : 1;
+        const blink = act && !stillLeds ? (Math.sin(time * 22) > 0 ? 1 : 0.25) : 1;
         en.leds[0].opacity = blink;
         en.leds[0].transparent = true;
       }
@@ -1849,8 +1860,10 @@ function createStage(container, live, cb) {
     const now = performance.now();
     const dt = Math.min((now - last) / 1000, 0.05);
     last = now;
-    time += dt;
+    const calm = prefersReducedMotion();
+    if (!calm) time += dt;
     advance(dt);
+    stillLeds = calm;
     update(dt);
     controls.update();
     renderer.render(scene, camera);
@@ -1927,6 +1940,7 @@ const CSS = `
 .nt-drop b{color:#F43F5E;font-weight:600}
 @keyframes ntIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .nt-in{animation:ntIn .28s cubic-bezier(.2,.8,.2,1) both}
+@media (prefers-reduced-motion:reduce){.nt-root *,.nt-root *::before,.nt-root *::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 `;
 
 function ProtoChip({ p, small }) {
@@ -2239,8 +2253,18 @@ function CaptureTable({ events, idx, seek }) {
     else if (bottom > c.scrollTop + c.clientHeight) c.scrollTop = bottom - c.clientHeight + 4;
   }, [idx, events]);
   const grid = 'grid grid-cols-[44px_66px_minmax(0,1.1fr)_minmax(0,1.1fr)_70px_minmax(0,3fr)_50px] items-center gap-x-3';
+  // The current frame is the one tab stop. Up and Down move to the next frame and take focus with them. Space selects the row here and does not toggle playback.
+  const onRowKey = (k, i) => {
+    if (k.code === 'Space') { k.stopPropagation(); return; }
+    const n = k.key === 'ArrowDown' ? i + 1 : k.key === 'ArrowUp' ? i - 1 : k.key === 'Home' ? 0 : k.key === 'End' ? events.length - 1 : -1;
+    if (n < 0 || n >= events.length) return;
+    k.preventDefault();
+    seek(n);
+    const next = box.current && box.current.querySelector(`[data-row="${n}"]`);
+    if (next) next.focus();
+  };
   return (
-    <div ref={box} className="nt-scroll relative min-h-0 flex-1 overflow-y-auto">
+    <div ref={box} role="group" aria-label="Packet capture. Up and Down arrows move between frames." className="nt-scroll relative min-h-0 flex-1 overflow-y-auto">
       <div className={`${grid} sticky top-0 z-10 h-[26px] border-b border-white/[0.07] bg-[#0E1016] px-3 font-mono text-[9.5px] tracking-[0.14em] text-zinc-500`}>
         <span>NO.</span><span>TIME</span><span>SOURCE</span><span>DESTINATION</span><span>PROTOCOL</span><span>INFO</span><span className="text-right">SIZE</span>
       </div>
@@ -2248,7 +2272,7 @@ function CaptureTable({ events, idx, seek }) {
         const c = PROTO_COLOR[e.proto];
         const cur = i === idx;
         return (
-          <div key={i} data-row={i} role="row" onClick={() => seek(i)} className={`${grid} relative h-[25px] cursor-pointer px-3 font-mono text-[11px] transition-colors ${cur ? 'bg-white/[0.06]' : 'hover:bg-white/[0.03]'} ${i > idx ? 'opacity-45' : ''}`}>
+          <button key={i} type="button" data-row={i} tabIndex={cur ? 0 : -1} aria-current={cur ? 'true' : undefined} onClick={() => seek(i)} onKeyDown={(k) => onRowKey(k, i)} className={`${grid} relative h-[25px] w-full cursor-pointer px-3 text-left font-mono text-[11px] transition-colors focus-visible:outline focus-visible:outline-1 focus-visible:-outline-offset-1 focus-visible:outline-white/60 ${cur ? 'bg-white/[0.06]' : 'hover:bg-white/[0.03]'} ${i > idx ? 'opacity-45' : ''}`}>
             {cur && <span className="absolute inset-y-0 left-0 w-[2px]" style={{ background: c }} />}
             <span className="tabular-nums text-zinc-500">{e.no}</span>
             <span className="tabular-nums text-zinc-400">{e.t.toFixed(3)}</span>
@@ -2257,7 +2281,7 @@ function CaptureTable({ events, idx, seek }) {
             <span className="flex items-center gap-1.5" style={{ color: c }}><span className="h-1.5 w-1.5 rounded-full" style={{ background: c }} />{e.proto}</span>
             <span className={`truncate ${e.drop ? 'text-[#FDA4AF]' : 'text-zinc-200'}`}>{e.info}<span className="text-zinc-600">{e.hop ? `  · ${e.hop}` : ''}</span></span>
             <span className="text-right tabular-nums text-zinc-500">{e.size || ''}</span>
-          </div>
+          </button>
         );
       })}
     </div>
@@ -2706,7 +2730,7 @@ function SequenceModal({ sim, idx, seek, onClose, topo }) {
               <g key={i} onClick={() => seek(i)} className="cursor-pointer" opacity={i > idx ? 0.4 : 1}>
                 <rect x={0} y={y - rowH / 2} width={width} height={rowH} fill={cur ? 'rgba(255,255,255,.05)' : 'transparent'} />
                 {cur && <rect x={0} y={y - rowH / 2} width={2} height={rowH} fill={c} />}
-                <text x={16} y={y + 4} fill={cur ? '#F3F4F6' : '#71717A'} fontSize="10.5" fontFamily={FONT_MONO}>{e.t.toFixed(3)}s</text>
+                <text x={16} y={y + 4} fill={cur ? '#F3F4F6' : '#93939D'} fontSize="10.5" fontFamily={FONT_MONO}>{e.t.toFixed(3)}s</text>
                 {e.drop ? (
                   <g>
                     <path d={`M${x1 - 6} ${y - 6} l12 12 M${x1 + 6} ${y - 6} l-12 12`} stroke={PROTO_COLOR.DROP} strokeWidth="2" strokeLinecap="round" />
@@ -2738,7 +2762,7 @@ export default function NetTracer() {
   const [topo, setTopo] = useState(() => labTopology(LABS[0]));
   const [sbFlow, setSbFlow] = useState(LABS[0].flow);
   const [idx, setIdx] = useState(0);
-  const [playing, setPlaying] = useState(true);
+  const [playing, setPlaying] = useState(() => !prefersReducedMotion());
   const [speed, setSpeed] = useState(1);
   const [exploded, setExploded] = useState(false);
   const [showSeq, setShowSeq] = useState(false);
@@ -2759,7 +2783,7 @@ export default function NetTracer() {
 
   const mountRef = useRef(null);
   const stageRef = useRef(null);
-  const live = useRef({ events: [], idx: 0, progress: 0, playing: true, stepping: false, speed: 1, exploded: false, mode: 'guided', hold: 0 });
+  const live = useRef({ events: [], idx: 0, progress: 0, playing: !prefersReducedMotion(), stepping: false, speed: 1, exploded: false, mode: 'guided', hold: 0 });
   const cbRef = useRef(null);
   cbRef.current = {
     onIndex: (i) => setIdx(i),
@@ -2786,9 +2810,11 @@ export default function NetTracer() {
   }, [topo, selected]);
   useEffect(() => {
     const L = live.current;
-    Object.assign(L, { events: sim.events, idx: 0, progress: 0, hold: 0, playing: true, stepping: false });
+    // A new capture plays by itself, unless the visitor asked for less motion. Then it waits for Play.
+    const auto = !prefersReducedMotion();
+    Object.assign(L, { events: sim.events, idx: 0, progress: 0, hold: 0, playing: auto, stepping: false });
     setIdx(0);
-    setPlaying(true);
+    setPlaying(auto);
   }, [sim]);
   useEffect(() => { live.current.speed = speed; }, [speed]);
   useEffect(() => { live.current.exploded = exploded; }, [exploded]);
