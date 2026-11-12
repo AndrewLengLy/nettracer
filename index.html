@@ -15,10 +15,31 @@
     <meta property="og:image" content="https://nettracer.andrewlengly.com/og.png" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content="https://nettracer.andrewlengly.com/og.png" />
-    <meta name="author" content="Andrew Leng Ly" />
+    <meta name="author" content="Andrew Ly" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "NetTracer",
+        "url": "https://nettracer.andrewlengly.com/",
+        "description": "An interactive network lab. Watch ARP, switching, routing, DNS, TCP and HTTP move frame by frame in 3D, see why each header changes, and apply one-click fixes like VLANs, HSRP and TLS.",
+        "applicationCategory": "EducationalApplication",
+        "operatingSystem": "Web",
+        "isAccessibleForFree": true,
+        "creator": { "@type": "Person", "@id": "https://www.andrewlengly.com/#person", "name": "Andrew Ly", "url": "https://www.andrewlengly.com" }
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <div style="max-width: 34rem; padding: 48px 28px; color: #f3f4f6; font-family: ui-sans-serif, system-ui, sans-serif; line-height: 1.6">
+        <h1 style="font-size: 26px; font-weight: 500">NetTracer</h1>
+        <p>NetTracer is an interactive network lab. It shows ARP, switching, routing, DNS, TCP and HTTP moving frame by frame across a 3D network, and why each header changes along the way. It also scores the network and offers one-click fixes such as VLANs and HSRP.</p>
+        <p>The lab runs in the browser and needs JavaScript turned on.</p>
+        <p><a href="https://www.andrewlengly.com" style="color: #a1a1aa">Built by Andrew Ly</a></p>
+      </div>
+    </noscript>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+// Inter and JetBrains Mono ship with the app (SIL Open Font License 1.1, see public/font-licenses.txt).
+import '@fontsource/inter/latin-300.css';
+import '@fontsource/inter/latin-400.css';
+import '@fontsource/inter/latin-500.css';
+import '@fontsource/inter/latin-600.css';
+import '@fontsource/jetbrains-mono/latin-400.css';
+import '@fontsource/jetbrains-mono/latin-500.css';
+import '@fontsource/jetbrains-mono/latin-600.css';
 import './index.css';
 import NetTracer from './NetTracer.jsx';
 
@@ -21,7 +29,7 @@ function App() {
           NetTracer runs a 3D network diorama next to a live packet capture and a layer-by-layer inspector. Open it on a laptop or desktop for the full lab.
         </p>
         <button onClick={() => setForce(true)} className="h-10 rounded-md bg-[#F3F4F6] px-4 text-[14px] font-medium text-[#090A0F]">Open anyway</button>
-        <a href="https://www.andrewlengly.com" className="font-mono text-[12px] tracking-[0.08em] text-zinc-500 underline underline-offset-4">andrewlengly.com</a>
+        <a href="https://www.andrewlengly.com" className="font-mono text-[12px] tracking-[0.08em] text-zinc-500 underline underline-offset-4">Built by Andrew Ly</a>
       </div>
     );
   }
