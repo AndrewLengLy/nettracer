@@ -22,9 +22,9 @@ Sandbox mode adds laptops and servers, lets you drag devices around, and runs pi
 
 ## How it works
 
-`src/NetTracer.jsx` is one self-contained component in three parts.
+The app has three parts. The network engine lives in `src/net-core/`; the stage and interface live in `src/NetTracer.jsx`.
 
-1. **Network engine.** Pure functions turn the topology and a traffic flow into an event list. ARP caches, switch MAC tables, VLAN domains, HSRP election, longest-prefix routing, TTL and checksums are all computed from live device config. Edit any IP, gateway, VLAN, route or power state and the capture changes with it.
+1. **Network engine (`src/net-core/`).** Plain TypeScript with no React or DOM imports, shared with [NetTracer XR](https://github.com/AndrewLengLy/nettracer-xr). Pure functions turn the topology and a traffic flow into an event list. ARP caches, switch MAC tables, VLAN domains, HSRP election, longest-prefix routing, TTL and checksums are all computed from live device config. Routers can also run source NAT. Edit any IP, gateway, VLAN, route or power state and the capture changes with it.
 2. **Three.js stage.** A 28° telephoto camera over a matte diorama with procedural laptops, switches, a router and rack servers. Packets travel along floor splines as capsules, and "Explode OSI Layers" splits each packet into its L2, L3, L4 and L7 slabs.
 3. **React interface.** Header OSI strip and health score, lab storyline, playback bar, capture table, step narrative, byte diff and the improvements panel. Styled with Tailwind, icons from lucide-react.
 
@@ -33,6 +33,11 @@ Sandbox mode adds laptops and servers, lets you drag devices around, and runs pi
 1. `npm install`
 2. `npm run dev`
 3. Open the local address Vite prints.
+
+## Test
+
+1. `npm test` runs the net-core unit tests (Vitest): ping across one switch, across one router with an ARP miss, and from a PC to a public IP through NAT.
+2. `npm run typecheck:core` type-checks net-core in strict mode.
 
 ## Deploy
 
