@@ -9,7 +9,7 @@ export interface DeviceMeta {
   /** Vendor guessed from the MAC prefix, e.g. "Apple". */
   vendor?: string;
   /** Device kind guessed by the scanner: router, phone, pc, tv, printer, unknown. */
-  kind?: 'router' | 'phone' | 'pc' | 'tv' | 'printer' | 'speaker' | 'console' | 'iot' | 'unknown';
+  kind?: 'router' | 'phone' | 'pc' | 'tv' | 'printer' | 'speaker' | 'console' | 'iot' | 'internet' | 'unknown';
   /** Hostname reported by the OS, when one resolved. */
   hostname?: string;
   /** How the device reaches the router. Visual only. */

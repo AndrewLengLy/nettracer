@@ -197,7 +197,8 @@ export function buildNics(topo: Topology, ignorePower = false): Nic[] {
           id: `${d.id}:${f.name}`, dev: d.id, iface: f.name, kind: 'rif', mac: f.mac,
           vlan: isSwitch(up) ? Number(f.vlan) || 1 : 1,
           sw: isSwitch(up) ? up.id : null,
-          peer: isHost(up) ? up.id : null,
+          // Point-to-point links reach a host or another router (for example an ISP edge router).
+          peer: isHost(up) || isRouter(up) ? up.id : null,
           addrs: (f.addrs || []).map((a) => ({ ...a, mac: f.mac })),
           vmacs: [], hsrp: f.hsrp || [], prio: d.priority || 100, roles: {}, domain: '',
         });

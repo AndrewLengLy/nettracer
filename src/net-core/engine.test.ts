@@ -138,3 +138,28 @@ describe('PC to a public IP through NAT', () => {
     expect(sim.events.some((e) => e.note.includes('NAT rewrites the private source 192.168.1.10'))).toBe(true);
   });
 });
+
+describe('router to router link (home router to ISP)', () => {
+  it('follows a default route to the next router, which answers for its own address', () => {
+    const t = oneRouter(true);
+    const r1 = t.devices.r1;
+    r1.ifaces![1] = { name: 'Gi0/1', mac: 'bb:00:00:00:00:02', peer: 'isp', vlan: 1, addrs: [{ ip: '100.64.0.2', mask: M24 }], hsrp: [] };
+    r1.routes = [
+      { net: '192.168.1.0', mask: M24, iface: 'Gi0/0', via: '', type: 'C' },
+      { net: '100.64.0.0', mask: M24, iface: 'Gi0/1', via: '', type: 'C' },
+      { net: '0.0.0.0', mask: '0.0.0.0', iface: 'Gi0/1', via: '100.64.0.1', type: 'S' },
+    ];
+    r1.nat = { inside: 'Gi0/0', outside: 'Gi0/1', publicIp: '100.64.0.2' };
+    delete t.devices.srv;
+    t.devices.isp = {
+      id: 'isp', type: 'router', name: 'ISP', power: true, priority: 100, arpStatic: {},
+      ifaces: [{ name: 'Edge', mac: 'dd:00:00:00:00:01', peer: 'r1', vlan: 1, addrs: [{ ip: '100.64.0.1', mask: M24 }, { ip: '8.8.8.8', mask: '255.255.255.255' }], hsrp: [] }],
+      routes: [{ net: '100.64.0.0', mask: M24, iface: 'Edge', via: '', type: 'C' }],
+    };
+    const sim = simulate(t, { type: 'ping', src: 'pc', dst: '8.8.8.8' });
+    expect(sim.ok).toBe(true);
+    const routerArp = sim.events.find((e) => e.proto === 'ARP' && e.flat['arp.sip'] === '100.64.0.2');
+    expect(routerArp?.flat['arp.tip']).toBe('100.64.0.1');
+    expect(echoes(sim.events, '0 · Echo reply').at(-1)!.at).toBe('pc');
+  });
+});
